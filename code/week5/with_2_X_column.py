@@ -1,0 +1,58 @@
+import csv
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, classification_report
+
+
+train_data = []
+with open('train.csv', 'r', encoding='utf-8') as file:
+    csv_reader = csv.reader(file)
+    for row in csv_reader:
+        train_data.append(row)
+
+test_data = []
+with open('test.csv', 'r', encoding='utf-8') as file:
+    csv_reader = csv.reader(file)
+    for row in csv_reader:
+        test_data.append(row)
+
+# Separate the target (y) and input features
+
+
+y_train = [row[0] for row in train_data]
+X_train = [row[1:] for row in train_data]
+X_train = [' '.join(row[1:3]) for row in train_data]
+y_test = [row[0] for row in test_data]
+X_test = [row[1:] for row in test_data]
+X_test = [' '.join(row[1:3]) for row in test_data]
+
+
+count_vec = TfidfVectorizer(min_df=10, token_pattern=r'[a-zA-Z]+')
+# count_vec = CountVectorizer()
+
+x_train_bow = count_vec.fit_transform(X_train)
+
+model = MultinomialNB()
+model.fit(x_train_bow, y_train)
+
+# Evaluation
+x_train_bow = count_vec.transform(X_train)
+x_test_bow = count_vec.transform(X_test)
+accuracy = model.score(x_test_bow, y_test)
+print("accuracy: ", accuracy)
+y_predict_y_train = model.predict(x_train_bow)
+y_predict_y_test = model.predict(x_test_bow)
+
+print("Now for training data set:\n")
+
+print(classification_report(y_train, y_predict_y_train))
+cm = confusion_matrix(y_train, y_predict_y_train)
+print(cm)
+
+print()
+print("Now for testing data set:\n")
+
+print(classification_report(y_test, y_predict_y_test))
+cm = confusion_matrix(y_test, y_predict_y_test)
+print(cm)
